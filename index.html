@@ -237,6 +237,104 @@ footer{
         font-size:11px;
     }
 }
+
+/* ==================== Doctor Database UI ==================== */
+.doctor-section {
+  margin: 20px 0;
+  padding: 20px;
+  border-radius: 18px;
+  background: var(--card-bg, #ffffff);
+  box-shadow: 0 4px 18px rgba(0,0,0,.08);
+}
+
+.doctor-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.doctor-title h2 {
+  margin: 0 0 5px;
+}
+
+.doctor-title p {
+  margin: 0;
+  opacity: .7;
+  font-size: 14px;
+}
+
+.doctor-search-box input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 14px 16px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  font-size: 16px;
+  outline: none;
+}
+
+.doctor-filters {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.doctor-filters select {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.doctor-results {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.doctor-card {
+  padding: 16px;
+  border-radius: 15px;
+  border: 1px solid #e5e5e5;
+  background: #fff;
+}
+
+.doctor-card h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.doctor-card .doctor-meta {
+  display: grid;
+  gap: 5px;
+  font-size: 14px;
+}
+
+.doctor-card .doctor-source {
+  display: inline-block;
+  margin-top: 10px;
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.doctor-empty {
+  text-align: center;
+  padding: 25px;
+  opacity: .7;
+}
+
+@media (max-width: 600px) {
+  .doctor-section {
+    padding: 15px;
+  }
+
+  .doctor-filters {
+    grid-template-columns: 1fr;
+  }
+}
+
 </style>
 </head>
 
@@ -343,6 +441,7 @@ async function loadDoctors() {
         doctors = Array.isArray(data) ? data : (data.doctors || []);
 
         console.log("Doctors loaded:", doctors.length);
+        setupDoctorFilters();
     } catch (error) {
         console.error("Doctor database error:", error);
         doctors = [];
@@ -1228,7 +1327,177 @@ async function startApp(){
 
 startApp();
 
+
+/* ==================== Doctor Database ==================== */
+
+function setupDoctorFilters() {
+    const departmentSelect = document.getElementById("doctorDepartment");
+    const designationSelect = document.getElementById("doctorDesignation");
+
+    if (!departmentSelect || !designationSelect) return;
+
+    const departments = [...new Set(
+        doctors.map(d => d.department).filter(Boolean)
+    )].sort();
+
+    const designations = [...new Set(
+        doctors.map(d => d.designation).filter(Boolean)
+    )].sort();
+
+    departments.forEach(value => {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = value;
+        departmentSelect.appendChild(option);
+    });
+
+    designations.forEach(value => {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = value;
+        designationSelect.appendChild(option);
+    });
+
+    departmentSelect.addEventListener("change", renderDoctors);
+    designationSelect.addEventListener("change", renderDoctors);
+
+    document.getElementById("doctorSearch")
+        ?.addEventListener("input", renderDoctors);
+
+    renderDoctors();
+}
+
+function renderDoctors() {
+    const container = document.getElementById("doctorResults");
+    const countText = document.getElementById("doctorCountText");
+
+    if (!container) return;
+
+    const q = (
+        document.getElementById("doctorSearch")?.value || ""
+    ).trim().toLowerCase();
+
+    const department =
+        document.getElementById("doctorDepartment")?.value || "";
+
+    const designation =
+        document.getElementById("doctorDesignation")?.value || "";
+
+    const filtered = doctors.filter(d => {
+        const searchable = [
+            d.name,
+            d.designation,
+            d.department,
+            d.specialty,
+            d.qualification,
+            d.workplace,
+            d.bmdc_reg_no
+        ].join(" ").toLowerCase();
+
+        return (
+            (!q || searchable.includes(q)) &&
+            (!department || d.department === department) &&
+            (!designation || d.designation === designation)
+        );
+    });
+
+    countText.textContent =
+        `${filtered.length} জন ডাক্তার পাওয়া গেছে`;
+
+    if (!filtered.length) {
+        container.innerHTML =
+            `<div class="doctor-empty">😕 কোনো ডাক্তার পাওয়া যায়নি</div>`;
+        return;
+    }
+
+    container.innerHTML = filtered.slice(0, 100).map(d => `
+        <article class="doctor-card">
+            <h3>👨‍⚕️ ${escapeHtml(d.name || "নাম নেই")}</h3>
+
+            <div class="doctor-meta">
+                ${d.designation
+                    ? `<div>💼 <b>পদ:</b> ${escapeHtml(d.designation)}</div>`
+                    : ""}
+
+                ${d.department
+                    ? `<div>🏥 <b>বিভাগ:</b> ${escapeHtml(d.department)}</div>`
+                    : ""}
+
+                ${d.specialty
+                    ? `<div>🩺 <b>বিশেষত্ব:</b> ${escapeHtml(d.specialty)}</div>`
+                    : ""}
+
+                ${d.qualification
+                    ? `<div>🎓 <b>যোগ্যতা:</b> ${escapeHtml(d.qualification)}</div>`
+                    : ""}
+
+                ${d.workplace
+                    ? `<div>🏨 <b>কর্মস্থল:</b> ${escapeHtml(d.workplace)}</div>`
+                    : ""}
+
+                ${d.bmdc_reg_no
+                    ? `<div>🔢 <b>BMDC:</b> ${escapeHtml(d.bmdc_reg_no)}</div>`
+                    : ""}
+            </div>
+
+            ${d.source
+                ? `<a class="doctor-source"
+                     href="${escapeAttribute(d.source)}"
+                     target="_blank"
+                     rel="noopener noreferrer">
+                     🔗 অফিসিয়াল Source
+                   </a>`
+                : ""}
+        </article>
+    `).join("");
+}
+
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+function escapeAttribute(value) {
+    return String(value).replace(/"/g, "&quot;");
+}
+
 </script>
+
+
+<!-- ==================== ডাক্তার ডাটাবেজ ==================== -->
+<section class="doctor-section" id="doctorDatabase">
+  <div class="doctor-title">
+    <div>
+      <h2>👨‍⚕️ ডাক্তার ডাটাবেজ</h2>
+      <p id="doctorCountText">ডাক্তারদের তথ্য লোড হচ্ছে...</p>
+    </div>
+  </div>
+
+  <div class="doctor-search-box">
+    <input
+      id="doctorSearch"
+      type="search"
+      placeholder="🔎 ডাক্তার, বিভাগ, যোগ্যতা বা হাসপাতাল লিখুন..."
+      autocomplete="off"
+    >
+  </div>
+
+  <div class="doctor-filters">
+    <select id="doctorDepartment">
+      <option value="">সব বিভাগ</option>
+    </select>
+
+    <select id="doctorDesignation">
+      <option value="">সব পদবি</option>
+    </select>
+  </div>
+
+  <div id="doctorResults" class="doctor-results"></div>
+</section>
 
 </body>
 </html>
