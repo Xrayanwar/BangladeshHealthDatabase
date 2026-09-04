@@ -330,6 +330,42 @@ GitHub থেকে JSON ডেটা নেওয়া হবে
 */
 
 const DATA_API_URL = "./data/health-data.json";
+const DOCTORS_API_URL = "./data/doctors.json";
+
+let doctors = [];
+
+async function loadDoctors() {
+    try {
+        const response = await fetch(DOCTORS_API_URL + "?t=" + Date.now());
+        if (!response.ok) throw new Error("Doctor data unavailable");
+
+        const data = await response.json();
+        doctors = Array.isArray(data) ? data : (data.doctors || []);
+
+        console.log("Doctors loaded:", doctors.length);
+    } catch (error) {
+        console.error("Doctor database error:", error);
+        doctors = [];
+    }
+}
+
+function searchDoctors(keyword = "") {
+    const q = keyword.trim().toLowerCase();
+
+    return doctors.filter(d => {
+        if (!q) return true;
+
+        return [
+            d.name,
+            d.designation,
+            d.department,
+            d.specialty,
+            d.qualification,
+            d.workplace,
+            d.bmdc_reg_no
+        ].join(" ").toLowerCase().includes(q);
+    });
+}
 
 let facilities = [];
 let doctors = [];
