@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0d6efd">
+<title>বাংলাদেশ স্বাস্থ্যসেবা ডাটাবেজ</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+}
+
+body{
+    font-family:Arial,"Noto Sans Bengali",sans-serif;
+    background:#f4f7fb;
+    color:#1f2937;
+}
+
+header{
+    background:linear-gradient(135deg,#0d6efd,#0a58ca);
+    color:white;
+    padding:24px 16px;
+    text-align:center;
+    box-shadow:0 3px 12px rgba(0,0,0,.15);
+}
+
+header h1{
+    font-size:24px;
+    margin-bottom:7px;
+}
+
+header p{
+    font-size:14px;
+    opacity:.92;
+}
+
+.container{
+    width:100%;
+    max-width:1100px;
+    margin:auto;
+    padding:16px;
+}
+
+.update-box{
+    background:white;
+    border-radius:14px;
+    padding:15px;
+    margin-bottom:16px;
+    box-shadow:0 2px 10px rgba(0,0,0,.08);
+}
+
+.update-row{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    flex-wrap:wrap;
+}
+
+button{
+    border:0;
+    border-radius:9px;
+    padding:11px 16px;
+    cursor:pointer;
+    font-size:14px;
+}
+
+.update-btn{
+    background:#0d6efd;
+    color:white;
+}
+
+.update-btn:disabled{
+    opacity:.6;
+}
+
+.status{
+    font-size:13px;
+    color:#555;
+}
+
+.stats{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:12px;
+    margin-bottom:16px;
+}
+
+.stat{
+    background:white;
+    padding:17px 10px;
+    text-align:center;
+    border-radius:13px;
+    box-shadow:0 2px 8px rgba(0,0,0,.07);
+}
+
+.stat strong{
+    display:block;
+    font-size:23px;
+    color:#0d6efd;
+    margin-bottom:5px;
+}
+
+.stat span{
+    font-size:13px;
+}
+
+.search-box{
+    background:white;
+    padding:15px;
+    border-radius:14px;
+    margin-bottom:16px;
+    box-shadow:0 2px 10px rgba(0,0,0,.08);
+}
+
+.search-box input{
+    width:100%;
+    padding:14px;
+    border:1px solid #ddd;
+    border-radius:10px;
+    font-size:16px;
+    outline:none;
+}
+
+.search-box input:focus{
+    border-color:#0d6efd;
+}
+
+.filters{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    margin-top:12px;
+}
+
+select{
+    width:100%;
+    padding:12px;
+    border:1px solid #ddd;
+    border-radius:9px;
+    background:white;
+    font-size:14px;
+}
+
+.results-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:12px;
+}
+
+.results-header h2{
+    font-size:18px;
+}
+
+#resultCount{
+    font-size:13px;
+    color:#666;
+}
+
+.card{
+    background:white;
+    border-radius:14px;
+    padding:17px;
+    margin-bottom:12px;
+    box-shadow:0 2px 9px rgba(0,0,0,.08);
+}
+
+.card h3{
+    color:#0d6efd;
+    font-size:18px;
+    margin-bottom:9px;
+}
+
+.info{
+    margin:6px 0;
+    font-size:14px;
+    line-height:1.5;
+}
+
+.label{
+    font-weight:bold;
+}
+
+.badge{
+    display:inline-block;
+    background:#e8f1ff;
+    color:#0d6efd;
+    padding:5px 8px;
+    border-radius:7px;
+    font-size:12px;
+    margin-top:7px;
+}
+
+.empty{
+    background:white;
+    border-radius:14px;
+    padding:35px 15px;
+    text-align:center;
+    color:#777;
+}
+
+.loading{
+    text-align:center;
+    padding:30px;
+}
+
+footer{
+    text-align:center;
+    padding:25px 15px;
+    color:#777;
+    font-size:12px;
+}
+
+@media(max-width:700px){
+    .stats{
+        grid-template-columns:repeat(3,1fr);
+    }
+
+    .filters{
+        grid-template-columns:1fr;
+    }
+
+    header h1{
+        font-size:21px;
+    }
+}
+
+@media(max-width:420px){
+    .stat strong{
+        font-size:19px;
+    }
+
+    .stat span{
+        font-size:11px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>🏥 বাংলাদেশ স্বাস্থ্যসেবা ডাটাবেজ</h1>
+    <p>হাসপাতাল, ক্লিনিক ও স্বাস্থ্যসেবা প্রতিষ্ঠানের তথ্য</p>
+</header>
+
+<div class="container">
+
+    <div class="update-box">
+        <div class="update-row">
+            <button class="update-btn" id="updateBtn" onclick="updateOnlineData()">
+                🔄 অনলাইন ডেটা আপডেট করুন
+            </button>
+            <span class="status" id="status">
+                ডেটা লোড হচ্ছে...
+            </span>
+        </div>
+    </div>
+
+    <div class="stats">
+        <div class="stat">
+            <strong id="facilityCount">0</strong>
+            <span>🏥 প্রতিষ্ঠান</span>
+        </div>
+
+        <div class="stat">
+            <strong id="doctorCount">0</strong>
+            <span>👨‍⚕️ ডাক্তার</span>
+        </div>
+
+        <div class="stat">
+            <strong id="districtCount">0</strong>
+            <span>📍 জেলা</span>
+        </div>
+    </div>
+
+    <div class="search-box">
+
+        <input
+            type="search"
+            id="searchInput"
+            placeholder="🔍 ডাক্তার, হাসপাতাল, ক্লিনিক বা প্রতিষ্ঠানের নাম লিখুন..."
+            oninput="performSearch()"
+        >
+
+        <div class="filters">
+
+            <select id="typeFilter" onchange="performSearch()">
+                <option value="">সব ধরনের প্রতিষ্ঠান</option>
+            </select>
+
+            <select id="divisionFilter" onchange="performSearch()">
+                <option value="">সব বিভাগ</option>
+            </select>
+
+            <select id="districtFilter" onchange="performSearch()">
+                <option value="">সব জেলা</option>
+            </select>
+
+        </div>
+    </div>
+
+    <div class="results-header">
+        <h2>🔎 ফলাফল</h2>
+        <span id="resultCount">0টি</span>
+    </div>
+
+    <div id="results">
+        <div class="loading">
+            ⏳ ডেটা লোড হচ্ছে...
+        </div>
+    </div>
+
+</div>
+
+<footer>
+    বাংলাদেশ স্বাস্থ্যসেবা ডাটাবেজ<br>
+    তথ্যের উৎস: সরকারি স্বাস্থ্যসেবা সংক্রান্ত প্রকাশ্য তথ্য
+</footer>
+
+<script>
+
+/*
+====================================================
+GitHub থেকে JSON ডেটা নেওয়া হবে
+====================================================
+*/
+
+const DATA_API_URL = "./data/health-data.json";
+
+let facilities = [];
+let doctors = [];
+
+
+/*
+====================================================
+IndexedDB
+ফোনে ডেটা সংরক্ষণ করা হবে
+====================================================
+*/
+
+let db;
+
+const DB_NAME = "BangladeshHealthDatabase";
+const DB_VERSION = 1;
+
+function openDatabase(){
+
+    return new Promise((resolve,reject)=>{
+
+        const request =
+            indexedDB.open(DB_NAME,DB_VERSION);
+
+        request.onupgradeneeded = function(event){
+
+            db = event.target.result;
+
+            if(!db.objectStoreNames.contains("facilities")){
+                db.createObjectStore("facilities",{keyPath:"id"});
+            }
+
+            if(!db.objectStoreNames.contains("doctors")){
+                db.createObjectStore("doctors",{keyPath:"id"});
+            }
+
+            if(!db.objectStoreNames.contains("meta")){
+                db.createObjectStore("meta",{keyPath:"key"});
+            }
+        };
+
+        request.onsuccess = function(event){
+
+            db = event.target.result;
+
+            resolve(db);
+        };
+
+        request.onerror = function(){
+
+            reject(request.error);
+        };
+
+    });
+}
+
+
+/*
+====================================================
+IndexedDB-তে Facility সংরক্ষণ
+====================================================
+*/
+
+function saveFacilities(data){
+
+    return new Promise((resolve,reject)=>{
+
+        const transaction =
+            db.transaction(["facilities"],"readwrite");
+
+        const store =
+            transaction.objectStore("facilities");
+
+        store.clear();
+
+        data.forEach(item=>{
+
+            if(!item.id){
+                item.id =
+                    "facility_" +
+                    Math.random().toString(36).substring(2);
+            }
+
+            store.put(item);
+
+        });
+
+        transaction.oncomplete = resolve;
+
+        transaction.onerror = ()=>{
+            reject(transaction.error);
+        };
+
+    });
+}
+
+
+/*
+====================================================
+IndexedDB থেকে Facility পড়া
+====================================================
+*/
+
+function getFacilities(){
+
+    return new Promise((resolve,reject)=>{
+
+        const transaction =
+            db.transaction(["facilities"],"readonly");
+
+        const store =
+            transaction.objectStore("facilities");
+
+        const request =
+            store.getAll();
+
+        request.onsuccess = ()=>{
+            resolve(request.result || []);
+        };
+
+        request.onerror = ()=>{
+            reject(request.error);
+        };
+
+    });
+}
+
+
+/*
+====================================================
+Online JSON ডেটা লোড
+====================================================
+*/
+
+async function updateOnlineData(){
+
+    const button =
+        document.getElementById("updateBtn");
+
+    const status =
+        document.getElementById("status");
+
+    button.disabled = true;
+
+    status.textContent =
+        "⏳ অনলাইন ডেটা আপডেট হচ্ছে...";
+
+    try{
+
+        const response =
+            await fetch(
+                DATA_API_URL +
+                "?t=" +
+                Date.now(),
+                {
+                    cache:"no-store"
+                }
+            );
+
+        if(!response.ok){
+            throw new Error(
+                "HTTP " + response.status
+            );
+        }
+
+        const json =
+            await response.json();
+
+        /*
+        collector.py বর্তমানে
+        JSON array তৈরি করে।
+        ভবিষ্যতে object হলে সেটিও গ্রহণ করা হবে।
+        */
+
+        let data = [];
+
+        if(Array.isArray(json)){
+            data = json;
+        }
+        else if(Array.isArray(json.facilities)){
+            data = json.facilities;
+        }
+        else if(Array.isArray(json.data)){
+            data = json.data;
+        }
+
+        facilities =
+            data.map(normalizeFacility);
+
+        await saveFacilities(facilities);
+
+        status.textContent =
+            "✅ অনলাইন ডেটা সফলভাবে আপডেট হয়েছে";
+
+        await loadLocalData();
+
+    }
+    catch(error){
+
+        console.error(error);
+
+        status.textContent =
+            "⚠️ অনলাইন ডেটা আপডেট করা যায়নি";
+
+        await loadLocalData();
+    }
+
+    button.disabled = false;
+}
+
+
+/*
+====================================================
+Facility Normalize
+====================================================
+*/
+
+function normalizeFacility(item){
+
+    return {
+
+        id:
+            String(
+                item.id ||
+                item.Id ||
+                item.ID ||
+                (
+                    item.code ||
+                    item.Code ||
+                    Math.random()
+                )
+            ),
+
+        name:
+            item.name ||
+            item.Name ||
+            "",
+
+        name_bn:
+            item.name_bn ||
+            item["Name (Bangla)"] ||
+            item.NameBangla ||
+            "",
+
+        code:
+            item.code ||
+            item.Code ||
+            "",
+
+        email:
+            item.email ||
+            item.email_1 ||
+            item.Email ||
+            "",
+
+        agency:
+            item.agency ||
+            item.facility_agency_name ||
+            item.Agency ||
+            "",
+
+        type:
+            item.type ||
+            item.facility_type_name ||
+            item.Type ||
+            "",
+
+        division:
+            item.division ||
+            item.division_name ||
+            item.Division ||
+            "",
+
+        district:
+            item.district ||
+            item.district_name ||
+            item.District ||
+            "",
+
+        upazila:
+            item.upazila ||
+            item.upazila_name ||
+            item.Upazila ||
+            "",
+
+        city:
+            item.city ||
+            item.city_corporation_name ||
+            item["City Corporation"] ||
+            "",
+
+        municipality:
+            item.paurasava ||
+            item.paurasava_name ||
+            item.Paurasava ||
+            "",
+
+        union:
+            item.union ||
+            item.union_name ||
+            item.Union ||
+            "",
+
+        private:
+            item.private ||
+            item.is_private ||
+            item.Private ||
+            ""
+
+    };
+}
+
+
+/*
+====================================================
+Local Data Load
+====================================================
+*/
+
+async function loadLocalData(){
+
+    try{
+
+        facilities =
+            await getFacilities();
+
+        doctors = [];
+
+        updateStatistics();
+
+        populateFilters();
+
+        performSearch();
+
+        if(facilities.length > 0){
+
+            document.getElementById("status")
+                .textContent =
+                "📱 ফোনে সংরক্ষিত ডেটা দেখানো হচ্ছে";
+
+        }
+        else{
+
+            document.getElementById("status")
+                .textContent =
+                "ℹ️ এখনো কোনো ডেটা নেই";
+
+        }
+
+    }
+    catch(error){
+
+        console.error(error);
+
+        document.getElementById("results")
+            .innerHTML =
+            `
+            <div class="empty">
+                ⚠️ ডেটা লোড করা যায়নি
+            </div>
+            `;
+    }
+}
+
+
+/*
+====================================================
+Statistics
+====================================================
+*/
+
+function updateStatistics(){
+
+    document.getElementById("facilityCount")
+        .textContent =
+        facilities.length.toLocaleString("bn-BD");
+
+    document.getElementById("doctorCount")
+        .textContent =
+        doctors.length.toLocaleString("bn-BD");
+
+    const districts =
+        new Set(
+            facilities
+            .map(x=>x.district)
+            .filter(Boolean)
+        );
+
+    document.getElementById("districtCount")
+        .textContent =
+        districts.size.toLocaleString("bn-BD");
+}
+
+
+/*
+====================================================
+Filter Dropdown
+====================================================
+*/
+
+function populateFilters(){
+
+    const typeFilter =
+        document.getElementById("typeFilter");
+
+    const divisionFilter =
+        document.getElementById("divisionFilter");
+
+    const districtFilter =
+        document.getElementById("districtFilter");
+
+    const oldType =
+        typeFilter.value;
+
+    const oldDivision =
+        divisionFilter.value;
+
+    const oldDistrict =
+        districtFilter.value;
+
+
+    /*
+    Institution Type
+    */
+
+    const types =
+        [...new Set(
+            facilities
+            .map(x=>x.type)
+            .filter(Boolean)
+        )]
+        .sort();
+
+    typeFilter.innerHTML =
+        `<option value="">সব ধরনের প্রতিষ্ঠান</option>`;
+
+    types.forEach(type=>{
+
+        const option =
+            document.createElement("option");
+
+        option.value = type;
+        option.textContent = type;
+
+        typeFilter.appendChild(option);
+
+    });
+
+
+    /*
+    Division
+    */
+
+    const divisions =
+        [...new Set(
+            facilities
+            .map(x=>x.division)
+            .filter(Boolean)
+        )]
+        .sort();
+
+    divisionFilter.innerHTML =
+        `<option value="">সব বিভাগ</option>`;
+
+    divisions.forEach(division=>{
+
+        const option =
+            document.createElement("option");
+
+        option.value = division;
+        option.textContent = division;
+
+        divisionFilter.appendChild(option);
+
+    });
+
+
+    /*
+    District
+    */
+
+    const districts =
+        [...new Set(
+            facilities
+            .map(x=>x.district)
+            .filter(Boolean)
+        )]
+        .sort();
+
+    districtFilter.innerHTML =
+        `<option value="">সব জেলা</option>`;
+
+    districts.forEach(district=>{
+
+        const option =
+            document.createElement("option");
+
+        option.value = district;
+        option.textContent = district;
+
+        districtFilter.appendChild(option);
+
+    });
+
+
+    typeFilter.value =
+        oldType;
+
+    divisionFilter.value =
+        oldDivision;
+
+    districtFilter.value =
+        oldDistrict;
+}
+
+
+/*
+====================================================
+Search
+====================================================
+*/
+
+function performSearch(){
+
+    const search =
+        document.getElementById("searchInput")
+        .value
+        .trim()
+        .toLowerCase();
+
+    const type =
+        document.getElementById("typeFilter")
+        .value;
+
+    const division =
+        document.getElementById("divisionFilter")
+        .value;
+
+    const district =
+        document.getElementById("districtFilter")
+        .value;
+
+
+    const filtered =
+        facilities.filter(item=>{
+
+            const searchable = [
+
+                item.name,
+                item.name_bn,
+                item.code,
+                item.type,
+                item.agency,
+                item.division,
+                item.district,
+                item.upazila,
+                item.city,
+                item.municipality,
+                item.union
+
+            ]
+            .join(" ")
+            .toLowerCase();
+
+
+            const matchSearch =
+                !search ||
+                searchable.includes(search);
+
+            const matchType =
+                !type ||
+                item.type === type;
+
+            const matchDivision =
+                !division ||
+                item.division === division;
+
+            const matchDistrict =
+                !district ||
+                item.district === district;
+
+
+            return (
+                matchSearch &&
+                matchType &&
+                matchDivision &&
+                matchDistrict
+            );
+
+        });
+
+
+    renderResults(filtered);
+}
+
+
+/*
+====================================================
+Result Render
+====================================================
+*/
+
+function renderResults(data){
+
+    const results =
+        document.getElementById("results");
+
+    const resultCount =
+        document.getElementById("resultCount");
+
+
+    resultCount.textContent =
+        data.length.toLocaleString("bn-BD") +
+        "টি";
+
+
+    if(data.length === 0){
+
+        results.innerHTML =
+            `
+            <div class="empty">
+                🔍 কোনো তথ্য পাওয়া যায়নি।
+                <br><br>
+                অন্য নাম, জেলা বা প্রতিষ্ঠানের ধরন দিয়ে চেষ্টা করুন।
+            </div>
+            `;
+
+        return;
+    }
+
+
+    /*
+    প্রথম 200টি ফলাফল দেখানো হচ্ছে
+    যাতে ফোনে বেশি ডেটা একসাথে Render না হয়।
+    */
+
+    const displayData =
+        data.slice(0,200);
+
+
+    results.innerHTML =
+        displayData.map(item=>{
+
+            const displayName =
+                item.name_bn ||
+                item.name ||
+                "নাম পাওয়া যায়নি";
+
+
+            return `
+
+            <div class="card">
+
+                <h3>
+                    🏥 ${escapeHTML(displayName)}
+                </h3>
+
+                ${
+                    item.name &&
+                    item.name_bn &&
+                    item.name !== item.name_bn
+                    ?
+                    `
+                    <div class="info">
+                        <span class="label">
+                        English:
+                        </span>
+                        ${escapeHTML(item.name)}
+                    </div>
+                    `
+                    :
+                    ""
+                }
+
+                ${
+                    item.type
+                    ?
+                    `
+                    <div>
+                        <span class="badge">
+                            ${escapeHTML(item.type)}
+                        </span>
+                    </div>
+                    `
+                    :
+                    ""
+                }
+
+                ${
+                    item.district
+                    ?
+                    `
+                    <div class="info">
+                        📍
+                        <span class="label">
+                        জেলা:
+                        </span>
+                        ${escapeHTML(item.district)}
+                    </div>
+                    `
+                    :
+                    ""
+                }
+
+                ${
+                    item.division
+                    ?
+                    `
+                    <div class="info">
+                        🗺️
+                        <span class="label">
+                        বিভাগ:
+                        </span>
+                        ${escapeHTML(item.division)}
+                    </div>
+                    `
+                    :
+                    ""
+                }
+
+                ${
+                    item.upazila
+                    ?
+                    `
+                    <div class="info">
+                        📌
+                        <span class="label">
+                        উপজেলা:
+                        </span>
+                        ${escapeHTML(item.upazila)}
+                    </div>
+                    `
+                    :
+                    ""
+                }
+
+                ${
+                    item.agency
+                    ?
+                    `
+                    <div class="info">
+                        🏢
+                        <span class="label">
+                        কর্তৃপক্ষ:
+                        </span>
+                        ${escapeHTML(item.agency)}
+                    </div>
+                    `
+                    :
+                    ""
+                }
+
+                ${
+                    item.code
+                    ?
+                    `
+                    <div class="info">
+                        🔢
+                        <span class="label">
+                        কোড:
+                        </span>
+                        ${escapeHTML(item.code)}
+                    </div>
+                    `
+                    :
+                    ""
+                }
+
+                ${
+                    item.email
+                    ?
+                    `
+                    <div class="info">
+                        ✉️
+                        <span class="label">
+                        Email:
+                        </span>
+                        ${escapeHTML(item.email)}
+                    </div>
+                    `
+                    :
+                    ""
+                }
+
+            </div>
+
+            `;
+
+        }).join("");
+
+
+    if(data.length > 200){
+
+        results.innerHTML +=
+            `
+            <div class="empty">
+                আরও
+                ${(
+                    data.length - 200
+                ).toLocaleString("bn-BD")}
+                টি ফলাফল রয়েছে।
+                <br>
+                সার্চ/ফিল্টার ব্যবহার করে ফলাফল ছোট করুন।
+            </div>
+            `;
+    }
+}
+
+
+/*
+====================================================
+HTML নিরাপত্তা
+====================================================
+*/
+
+function escapeHTML(value){
+
+    return String(value || "")
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+}
+
+
+/*
+====================================================
+App Start
+====================================================
+*/
+
+async function startApp(){
+
+    try{
+
+        await openDatabase();
+
+        await loadLocalData();
+
+        /*
+        App চালু হলেই অনলাইন আপডেট চেষ্টা করবে।
+        */
+
+        await updateOnlineData();
+
+    }
+    catch(error){
+
+        console.error(error);
+
+        document.getElementById("status")
+            .textContent =
+            "⚠️ অ্যাপ চালু করতে সমস্যা হয়েছে";
+
+    }
+
+}
+
+
+startApp();
+
+</script>
+
+</body>
+</html>
